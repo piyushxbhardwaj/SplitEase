@@ -160,8 +160,17 @@ export async function recordSettlement(prevState: any, formData: FormData) {
   console.log('currentAuthUser.id:', user?.id);
   console.log('-----------------------------');
 
-  if (!groupId || !paidBy || !paidTo || !amountStr) {
-    return { error: 'All fields are required' };
+  if (!groupId) {
+    return { error: 'Group is required' };
+  }
+  if (!paidBy) {
+    return { error: 'Payer is required' };
+  }
+  if (!paidTo) {
+    return { error: 'Recipient is required' };
+  }
+  if (!amountStr) {
+    return { error: 'Amount is required' };
   }
 
   if (paidBy === paidTo) {

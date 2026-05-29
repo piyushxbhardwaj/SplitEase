@@ -21,6 +21,8 @@ export default async function SettlePage({ params }: PageProps) {
   // Fetch group data
   const { members } = await getGroupData(groupId);
 
+
+
   // Security check
   const isMember = members.some((m) => m.id === user.id);
   if (!isMember) {

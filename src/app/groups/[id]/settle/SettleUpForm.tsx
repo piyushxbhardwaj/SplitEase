@@ -32,9 +32,12 @@ export default function SettleUpForm({
   const searchParams = useSearchParams();
   const [state, formAction, isPending] = useActionState(recordSettlement, initialState);
 
+  // Find other member if group has exactly 2 members
+  const otherMember = members.find((m) => m.id !== currentUserId);
+
   // Read prefilled query parameters from suggestion links
   const defaultFrom = searchParams.get('from') || currentUserId;
-  const defaultTo = searchParams.get('to') || '';
+  const defaultTo = searchParams.get('to') || (members.length === 2 ? otherMember?.id : '');
   const defaultAmt = searchParams.get('amt') || '';
 
   // Use controlled states to avoid SSR/hydration mismatch bugs on searchParams
@@ -60,13 +63,32 @@ export default function SettleUpForm({
     }
   }, [searchParams]);
 
+  const handlePayerChange = (val: string) => {
+    setPaidBy(val);
+    if (members.length === 2) {
+      const other = members.find((m) => m.id !== val);
+      if (other) {
+        setPaidTo(other.id);
+      }
+    }
+  };
+
+  const handleRecipientChange = (val: string) => {
+    setPaidTo(val);
+    if (members.length === 2) {
+      const other = members.find((m) => m.id !== val);
+      if (other) {
+        setPaidBy(other.id);
+      }
+    }
+  };
 
   return (
-    <div className="max-w-xl mx-auto bg-slate-900 border border-slate-850 rounded-2xl p-6 shadow-xl space-y-6">
+    <div className="max-w-xl mx-auto bg-slate-900 border border-slate-855 rounded-2xl p-6 shadow-xl space-y-6">
       <div className="flex items-center space-x-3 border-b border-slate-800 pb-4">
         <Link
           href={`/groups/${groupId}`}
-          className="p-2 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl transition-colors hover:border-slate-800"
+          className="p-2 bg-slate-950 border border-slate-855 text-slate-400 hover:text-white rounded-xl transition-colors hover:border-slate-800"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
@@ -94,14 +116,16 @@ export default function SettleUpForm({
             id="paidBy"
             name="paidBy"
             value={paidBy ?? ''}
-            onChange={(e) => setPaidBy(e.target.value)}
+            onChange={(e) => handlePayerChange(e.target.value)}
             className="mt-1 block w-full px-4 py-3 bg-slate-950 border border-slate-855 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
           >
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name || m.email} {m.id === currentUserId ? '(You)' : ''}
-              </option>
-            ))}
+            {members
+              .filter((m) => m.id !== paidTo)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name ? `${m.name} (${m.email})` : m.email} {m.id === currentUserId ? '(You)' : ''}
+                </option>
+              ))}
           </select>
         </div>
 
@@ -114,16 +138,18 @@ export default function SettleUpForm({
             id="paidTo"
             name="paidTo"
             value={paidTo ?? ''}
-            onChange={(e) => setPaidTo(e.target.value)}
+            onChange={(e) => handleRecipientChange(e.target.value)}
             required
             className="mt-1 block w-full px-4 py-3 bg-slate-950 border border-slate-855 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
           >
             <option value="">Select a member...</option>
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name || m.email} {m.id === currentUserId ? '(You)' : ''}
-              </option>
-            ))}
+            {members
+              .filter((m) => m.id !== paidBy)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name ? `${m.name} (${m.email})` : m.email} {m.id === currentUserId ? '(You)' : ''}
+                </option>
+              ))}
           </select>
         </div>
 

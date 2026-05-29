@@ -76,6 +76,8 @@ export default async function GroupDetailsPage({ params }: PageProps) {
     settlements
   );
 
+
+
   // Get current user's balance detail
   const myBalance = balances.find((b) => b.memberId === user.id);
   const myNet = myBalance ? myBalance.net : 0;
