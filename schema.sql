@@ -104,23 +104,19 @@ create policy "Authenticated users can create groups" on public.groups
   for insert with check (auth.uid() = created_by);
 
 -- Group Members Policies
-create policy "Members can view other members of their groups" on public.group_members
-  for select using (
+create policy "Allow authenticated users to view group members" on public.group_members
+  for select using (auth.uid() is not null);
+
+create policy "Allow group creators and members to add members" on public.group_members
+  for insert with check (
     exists (
+      select 1 from public.groups
+      where groups.id = group_members.group_id and groups.created_by = auth.uid()
+    )
+    or exists (
       select 1 from public.group_members as gm
       where gm.group_id = group_members.group_id and gm.user_id = auth.uid()
     )
-  );
-
-create policy "Any member can add others to the group" on public.group_members
-  for insert with check (
-    exists (
-      select 1 from public.group_members as gm
-      where gm.group_id = group_members.group_id and gm.user_id = auth.uid()
-    ) or not exists (
-      select 1 from public.group_members as gm
-      where gm.group_id = group_members.group_id
-    ) -- Allows initial insert during group creation
   );
 
 -- Expenses Policies
