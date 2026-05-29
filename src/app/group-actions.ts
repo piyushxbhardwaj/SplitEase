@@ -149,6 +149,17 @@ export async function recordSettlement(prevState: any, formData: FormData) {
   const paidTo = formData.get('paidTo') as string;
   const amountStr = formData.get('amount') as string;
 
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  console.log('--- RECORD SETTLEMENT LOG ---');
+  console.log('groupId:', groupId);
+  console.log('paidBy (payer):', paidBy);
+  console.log('paidTo (payee):', paidTo);
+  console.log('amountStr:', amountStr);
+  console.log('currentAuthUser.id:', user?.id);
+  console.log('-----------------------------');
+
   if (!groupId || !paidBy || !paidTo || !amountStr) {
     return { error: 'All fields are required' };
   }
@@ -161,8 +172,6 @@ export async function recordSettlement(prevState: any, formData: FormData) {
   if (isNaN(amount) || amount <= 0) {
     return { error: 'Amount must be a positive number' };
   }
-
-  const supabase = await createClient();
 
   const { error } = await supabase
     .from('settlements')

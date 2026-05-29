@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { recordSettlement } from '@/app/group-actions';
@@ -37,6 +37,30 @@ export default function SettleUpForm({
   const defaultTo = searchParams.get('to') || '';
   const defaultAmt = searchParams.get('amt') || '';
 
+  // Use controlled states to avoid SSR/hydration mismatch bugs on searchParams
+  const [paidBy, setPaidBy] = useState(defaultFrom);
+  const [paidTo, setPaidTo] = useState(defaultTo);
+  const [amount, setAmount] = useState(defaultAmt);
+
+  useEffect(() => {
+    if (searchParams.get('from')) {
+      setPaidBy(searchParams.get('from')!);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get('to')) {
+      setPaidTo(searchParams.get('to')!);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get('amt')) {
+      setAmount(searchParams.get('amt')!);
+    }
+  }, [searchParams]);
+
+
   return (
     <div className="max-w-xl mx-auto bg-slate-900 border border-slate-850 rounded-2xl p-6 shadow-xl space-y-6">
       <div className="flex items-center space-x-3 border-b border-slate-800 pb-4">
@@ -69,7 +93,8 @@ export default function SettleUpForm({
           <select
             id="paidBy"
             name="paidBy"
-            defaultValue={defaultFrom}
+            value={paidBy}
+            onChange={(e) => setPaidBy(e.target.value)}
             className="mt-1 block w-full px-4 py-3 bg-slate-950 border border-slate-855 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
           >
             {members.map((m) => (
@@ -88,7 +113,8 @@ export default function SettleUpForm({
           <select
             id="paidTo"
             name="paidTo"
-            defaultValue={defaultTo}
+            value={paidTo}
+            onChange={(e) => setPaidTo(e.target.value)}
             required
             className="mt-1 block w-full px-4 py-3 bg-slate-950 border border-slate-855 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
           >
@@ -117,8 +143,9 @@ export default function SettleUpForm({
               step="0.01"
               required
               min="0.01"
-              defaultValue={defaultAmt}
-              className="pl-11 block w-full px-4 py-3 bg-slate-950 border border-slate-850 rounded-xl text-white placeholder-slate-550 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="pl-11 block w-full px-4 py-3 bg-slate-950 border border-slate-855 rounded-xl text-white placeholder-slate-550 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               placeholder="0.00"
             />
           </div>
