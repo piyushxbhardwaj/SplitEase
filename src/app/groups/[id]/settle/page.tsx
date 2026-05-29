@@ -4,6 +4,8 @@ import Navbar from '@/components/layout/Navbar';
 import SettleUpForm from './SettleUpForm';
 import { Suspense } from 'react';
 
+import { calculateBalances } from '@/lib/calculations/balances';
+
 export const revalidate = 0; // Dynamic rendering
 
 interface PageProps {
@@ -19,10 +21,37 @@ export default async function SettlePage({ params }: PageProps) {
   }
 
   // Fetch group data
-  const { members } = await getGroupData(groupId);
+  const { members, expenses, splits, settlements } = await getGroupData(groupId);
 
+  const { balances } = calculateBalances(members, expenses, splits, settlements);
 
+  let suggestedPayerId = user.id;
+  let suggestedPayeeId = '';
 
+  if (members.length === 2) {
+    const otherMember = members.find((m) => m.id !== user.id);
+    if (otherMember) {
+      const myBalance = balances.find((b) => b.memberId === user.id);
+      const myNet = myBalance ? myBalance.net : 0;
+
+      if (myNet < 0) {
+        // Current user owes money, so current user is the payer
+        suggestedPayerId = user.id;
+        suggestedPayeeId = otherMember.id;
+      } else if (myNet > 0) {
+        // Other user owes money, so other user is the payer
+        suggestedPayerId = otherMember.id;
+        suggestedPayeeId = user.id;
+      } else {
+        // Settled: default to current user as payer
+        suggestedPayerId = user.id;
+        suggestedPayeeId = otherMember.id;
+      }
+    }
+  } else {
+    suggestedPayerId = user.id;
+    suggestedPayeeId = '';
+  }
   // Security check
   const isMember = members.some((m) => m.id === user.id);
   if (!isMember) {
@@ -45,6 +74,8 @@ export default async function SettlePage({ params }: PageProps) {
             groupName={groupName}
             members={members}
             currentUserId={user.id}
+            suggestedPayerId={suggestedPayerId}
+            suggestedPayeeId={suggestedPayeeId}
           />
         </Suspense>
       </main>

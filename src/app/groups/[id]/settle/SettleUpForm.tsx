@@ -21,6 +21,8 @@ interface SettleUpFormProps {
   groupName: string;
   members: Member[];
   currentUserId: string;
+  suggestedPayerId: string;
+  suggestedPayeeId: string;
 }
 
 export default function SettleUpForm({
@@ -28,16 +30,15 @@ export default function SettleUpForm({
   groupName,
   members,
   currentUserId,
+  suggestedPayerId,
+  suggestedPayeeId,
 }: SettleUpFormProps) {
   const searchParams = useSearchParams();
   const [state, formAction, isPending] = useActionState(recordSettlement, initialState);
 
-  // Find other member if group has exactly 2 members
-  const otherMember = members.find((m) => m.id !== currentUserId);
-
-  // Read prefilled query parameters from suggestion links
-  const defaultFrom = searchParams.get('from') || currentUserId;
-  const defaultTo = searchParams.get('to') || (members.length === 2 ? otherMember?.id : '');
+  // Read prefilled query parameters from suggestion links or use server-suggested defaults
+  const defaultFrom = searchParams.get('from') || suggestedPayerId;
+  const defaultTo = searchParams.get('to') || suggestedPayeeId;
   const defaultAmt = searchParams.get('amt') || '';
 
   // Use controlled states to avoid SSR/hydration mismatch bugs on searchParams
@@ -119,13 +120,11 @@ export default function SettleUpForm({
             onChange={(e) => handlePayerChange(e.target.value)}
             className="mt-1 block w-full px-4 py-3 bg-slate-950 border border-slate-855 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
           >
-            {members
-              .filter((m) => m.id !== paidTo)
-              .map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name ? `${m.name} (${m.email})` : m.email} {m.id === currentUserId ? '(You)' : ''}
-                </option>
-              ))}
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name ? `${m.name} (${m.email})` : m.email} {m.id === currentUserId ? '(You)' : ''}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -143,19 +142,22 @@ export default function SettleUpForm({
             className="mt-1 block w-full px-4 py-3 bg-slate-950 border border-slate-855 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
           >
             <option value="">Select a member...</option>
-            {members
-              .filter((m) => m.id !== paidBy)
-              .map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name ? `${m.name} (${m.email})` : m.email} {m.id === currentUserId ? '(You)' : ''}
-                </option>
-              ))}
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name ? `${m.name} (${m.email})` : m.email} {m.id === currentUserId ? '(You)' : ''}
+              </option>
+            ))}
           </select>
+          {paidBy === paidTo && paidBy !== '' && (
+            <p className="mt-1.5 text-xs text-rose-450 font-medium">
+              ⚠️ A member cannot settle with themselves. Please select a different recipient.
+            </p>
+          )}
         </div>
 
         {/* Amount */}
         <div>
-          <label htmlFor="amount" className="block text-sm font-semibold text-slate-350">
+          <label htmlFor="amount" className="block text-sm font-semibold text-slate-355">
             Amount ($)
           </label>
           <div className="relative mt-1">
@@ -192,7 +194,7 @@ export default function SettleUpForm({
           </Link>
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || (paidBy === paidTo && paidBy !== '')}
             className="flex items-center space-x-1.5 px-6 py-3 text-sm font-semibold rounded-xl text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 transition-all active:scale-98 disabled:opacity-50"
           >
             {isPending ? (
