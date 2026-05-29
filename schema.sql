@@ -92,9 +92,10 @@ create policy "Allow users to update their own profile" on public.profiles
   for update using (auth.uid() = id);
 
 -- Groups Policies
-create policy "Users can view groups they are members of" on public.groups
+create policy "Users can view groups they are members or creators of" on public.groups
   for select using (
-    exists (
+    auth.uid() = created_by
+    or exists (
       select 1 from public.group_members
       where group_members.group_id = groups.id and group_members.user_id = auth.uid()
     )
