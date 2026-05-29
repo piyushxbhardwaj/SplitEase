@@ -71,16 +71,14 @@ $$\text{Net Balance} = (\text{Total Paid} + \text{Settlements Paid}) - (\text{To
 
 ## Screenshots
 
-*(Placeholders: Add images below once captured from the active application)*
-
 ### 1. User Dashboard
-![User Dashboard Placeholder](https://via.placeholder.com/800x450/020617/ffffff?text=SplitEase+User+Dashboard+Screenshot)
+![User Dashboard](./public/screenshots/dashboard.png)
 
 ### 2. Group Hub & Ledger
-![Group Ledger Placeholder](https://via.placeholder.com/800x450/020617/ffffff?text=SplitEase+Group+Details+and+Ledger+Screenshot)
+![Group Ledger](./public/screenshots/group_hub.png)
 
 ### 3. Record Settlement Page
-![Record Settlement Placeholder](https://via.placeholder.com/800x450/020617/ffffff?text=SplitEase+Settle+Up+Form+Screenshot)
+![Record Settlement Form](./public/screenshots/settle_form.png)
 
 ---
 
